@@ -354,6 +354,46 @@ exact mechanics are refined below and in Requirements as they are worked out.
    projects by asking the agent — for example, setting up a new client workspace,
    opening a project within it, or marking a project as closed.
 
+## Capture pipeline
+
+This is the path from raw input to knowledge-base and task updates. Its control
+flow is the orchestration already described (resolve project → select and invoke
+agents → combine and apply under autonomy); this section fixes the **front of the
+pipeline** and its **runtime characteristics**.
+
+**Accepted inputs.** The user can provide:
+
+- **Typed text** in the conversation.
+- **Speech**, transcribed **server-side** (keeping clients thin, NFR-6, and the
+  transcription model swappable/self-hostable, NFR-7); voice is input only (FR-36).
+- **Documents** — plain text and Markdown, PDF, common office documents, and
+  **HTML**.
+- **Web pages pointed to by links** — when the user provides a URL, the platform
+  **fetches** the page and ingests its content like any other document.
+- *(Images / OCR are a possible later extension.)*
+
+Concrete size limits are platform-defined and tunable.
+
+**Raw input retention.** Originals are **retained as source artifacts** — the
+uploaded file, the transcript, the fetched web page (stored as a **snapshot** taken
+at ingest time, since the live page may change), and the audio — and are **linked
+from the knowledge-base entries they produced**, for provenance. Source artifacts
+are **interaction/source state, not knowledge** (the same distinction drawn for the
+conversation log): they do not compromise the knowledge base as the single source
+of truth, and the user can **delete** them. (Retention windows are tunable; see Open
+questions.)
+
+**Processing model.** Capture is handled **interactively** for quick typed inputs,
+and **asynchronously** for larger captures (documents, long audio, fetched pages):
+the input is accepted immediately and processed in the background, with results
+arriving as proposals in the **durable review queue** (or auto-applied under
+autonomy). This makes capture-and-go practical on mobile.
+
+**Duplicate handling.** Before writing, capture is **reconciled against the current
+knowledge base** (agents read before they write): re-sharing similar content updates
+or de-duplicates rather than blindly appending. Duplicate-resistance is a property
+of the extract/write step, not input-level idempotency.
+
 ## Conversation and interaction state
 
 The product is used through a conversation, so the platform keeps **interaction
@@ -503,8 +543,9 @@ conversation-state decisions (see Open questions).
 
 ### Capture
 
-- **FR-8** The user can provide information by **typing**, by **speaking**, or by
-  **sharing documents** (for example, notes or meeting transcripts).
+- **FR-8** The user can provide information by **typing**, by **speaking**, by
+  **sharing documents** (for example, notes or meeting transcripts), or by
+  **providing links to web pages**. Accepted formats are detailed in FR-48.
 - **FR-9** The platform **interprets** user input and updates the relevant
   information without requiring the user to structure it manually.
 - **FR-10** When an input spans **several projects**, the platform routes it to
@@ -520,6 +561,21 @@ conversation-state decisions (see Open questions).
   stored foreign key.
 - **FR-36** Voice is supported for **input only**; agents respond in text, not by
   voice.
+- **FR-48** Accepted inputs are **typed text**, **speech** (transcribed
+  server-side), **documents** (plain text/Markdown, PDF, common office formats, and
+  HTML), and **web pages fetched from user-provided links**. Size limits are
+  platform-defined; images/OCR are a future extension.
+- **FR-49** Raw inputs are **retained as source artifacts** (uploaded files,
+  transcripts, fetched-page snapshots, audio), **linked from the knowledge-base
+  entries they produced** for provenance, classified as **interaction/source state**
+  (not knowledge), and **user-deletable**. A fetched web page is stored as a
+  **snapshot taken at ingest time**.
+- **FR-50** Capture is processed **interactively** for quick typed inputs and
+  **asynchronously** for larger inputs; asynchronous results are delivered as
+  proposals to the **durable review queue** (FR-47) or applied under autonomy.
+- **FR-51** Before writing, capture is **reconciled against current knowledge-base
+  state** to avoid duplication (agents read before writing); the platform does not
+  rely on input-level idempotency.
 
 ### Retrieval
 
@@ -695,9 +751,8 @@ lost, and resolve them into the sections above as decisions are made._
   prioritization, reminders, calendars, etc.) are intentionally deferred. The
   planning agent was introduced only as an example of an orchestrated specialized
   agent; taking it up later will require dedicated agent specialization.
-- **Data retention specifics (deferred).** The privacy posture, authentication, and
-  core safeguards are decided (see Identity, authentication, and data handling).
-  Still open: retention of **raw inputs** (uploaded documents, transcripts) and of
-  **conversation history** (the persisted log; see Conversation and interaction
-  state) — to be pinned with the capture-pipeline decision. Per-workspace/project
-  **privacy levels** remain a reserved future extension, not yet designed.
+- **Retention windows (deferred).** It is decided that raw inputs are retained as
+  source artifacts (FR-49) and conversation history as a log (FR-46), both
+  user-deletable. Still open: the default **retention windows / auto-purge policy**
+  for these artifacts and the conversation log. Per-workspace/project **privacy
+  levels** remain a reserved future extension, not yet designed.
