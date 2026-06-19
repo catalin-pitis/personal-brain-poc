@@ -354,6 +354,33 @@ exact mechanics are refined below and in Requirements as they are worked out.
    projects by asking the agent — for example, setting up a new client workspace,
    opening a project within it, or marking a project as closed.
 
+## Deployment and infrastructure
+
+Personal Brain is delivered as a **cloud-hosted service**. The backend, its
+databases, and any **self-hosted open-source models** run on **managed
+platform-as-a-service (PaaS)** infrastructure; users reach the product through
+**thin clients** (web and mobile) rather than running it themselves, and the
+agents execute **server-side**, not on the client.
+
+This follows from decisions already made: voice capture is first-class and meant
+to be used in the moment (pointing to mobile), the same knowledge base should be
+reachable from multiple devices, and the design must not preclude later multi-user
+collaboration (NFR-5) — all of which favor a hosted backend over a local-first or
+user-self-hosted deployment.
+
+**Model sourcing is flexible.** Consistent with the model-agnostic principle
+(FR-20, NFR-4), an agent may be powered either by a **third-party hosted model
+API** or by an **open-source model the platform self-hosts** on the same PaaS
+infrastructure, and different agents may choose differently. Self-hosting open
+models is the lever for keeping sensitive inference off third-party providers; how
+far to rely on it is part of the data-handling and privacy decision still to be
+made (see Open questions).
+
+Because the underlying store is a platform-managed concern (FR-42) and agents hold
+no private state (FR-6), the hosted services can remain effectively stateless, with
+all authoritative state in managed storage — consistent with the
+single-source-of-truth model.
+
 ## Requirements
 
 > A first pass derived from the decisions above. Requirements are stated only
@@ -527,6 +554,13 @@ exact mechanics are refined below and in Requirements as they are worked out.
   underlying models for different agents (FR-20), avoiding single-model lock-in.
 - **NFR-5** **Collaboration-ready (future).** The design should avoid choices that
   would preclude later multi-user sharing at the project or workspace level.
+- **NFR-6** **Deployment.** Personal Brain is **cloud-hosted**: backend,
+  databases, and any self-hosted models run on **managed PaaS** infrastructure;
+  users access it through **thin web and mobile clients**, and agents execute
+  **server-side**.
+- **NFR-7** **Model sourcing.** The platform supports both **third-party hosted
+  model APIs** and **self-hosted open-source models** on its own infrastructure,
+  selectable **per agent** (reinforces FR-20 and NFR-4).
 
 ## Open questions
 
@@ -573,3 +607,8 @@ lost, and resolve them into the sections above as decisions are made._
   prioritization, reminders, calendars, etc.) are intentionally deferred. The
   planning agent was introduced only as an example of an orchestrated specialized
   agent; taking it up later will require dedicated agent specialization.
+- **Data handling and privacy (next to decide).** Cloud hosting (NFR-6) means user
+  data resides in the platform's cloud and may flow to model providers. The privacy
+  posture — what data may leave to third-party models versus stay on self-hosted
+  open-source models (NFR-7), encryption at rest and in transit, retention, and how
+  the user authenticates to the platform — is the next foundational decision.
