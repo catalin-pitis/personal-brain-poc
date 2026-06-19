@@ -90,6 +90,14 @@ decided; terms still under discussion are marked as open._
   the user can let some tools run automatically — for example, read-only ones —
   while others still require confirmation. Autonomy is set **per tool** and
   applies uniformly, regardless of which agent invokes the tool.
+- **Source artifact** — a raw input retained for provenance: an uploaded file, a
+  transcript, an audio recording, or a snapshot of a fetched web page, linked from
+  the knowledge-base entries it produced. Source artifacts are **interaction/source
+  state, not knowledge**, and are user-deletable (see Capture pipeline).
+- **Review queue** — the durable store of agent-proposed changes awaiting the user's
+  confirmation (under propose-and-confirm autonomy), together with failed effects
+  awaiting retry. It is authoritative state the platform persists until each item is
+  resolved (see Conversation and interaction state; Reliability and consistency).
 
 ## Workspaces and projects
 
@@ -481,8 +489,8 @@ an exchange, never as a long-term memory the knowledge base does not also hold.
 Three decisions follow:
 
 - **Conversation history is persisted** across sessions, as a **log** the user can
-  revisit — explicitly **not** a knowledge source. (Its retention is part of the
-  raw-input retention still to be decided; see Open questions.)
+  revisit — explicitly **not** a knowledge source. (Its **retention window** is part
+  of the open retention question; see Open questions.)
 - Interaction happens in a **single assistant conversation**, not per-project
   threads: a single input routinely spans several projects (FR-10), while
   per-project knowledge is found in the knowledge base, organized by project.
@@ -491,9 +499,9 @@ Three decisions follow:
   default propose-and-confirm autonomy (FR-22), a change the user does not confirm
   immediately **survives** for review later, and an in-flight clarification likewise
   survives a dropped connection — which is what makes confirm-by-default usable for
-  asynchronous, mobile capture. This is the one piece of **authoritative state
-  beyond the knowledge base**: a store of pending proposals, persisted **durably
-  until resolved**.
+  asynchronous, mobile capture. It is **authoritative state the platform persists**
+  (alongside the knowledge base and the project↔task mapping): a store of pending
+  proposals, kept **durably until resolved**.
 
 ## Deployment and infrastructure
 
@@ -513,9 +521,9 @@ user-self-hosted deployment.
 (FR-20, NFR-4), an agent may be powered either by a **third-party hosted model
 API** or by an **open-source model the platform self-hosts** on the same PaaS
 infrastructure, and different agents may choose differently. Self-hosting open
-models is the lever for keeping sensitive inference off third-party providers; how
-far to rely on it is part of the data-handling and privacy decision still to be
-made (see Open questions).
+models is the lever for keeping sensitive inference off third-party providers; the
+privacy posture that governs this is set out under Identity, authentication, and
+data handling.
 
 Because the underlying store is a platform-managed concern (FR-42) and agents hold
 no private state (FR-6), the hosted services can remain effectively stateless, with
