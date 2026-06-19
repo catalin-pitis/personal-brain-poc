@@ -381,6 +381,32 @@ no private state (FR-6), the hosted services can remain effectively stateless, w
 all authoritative state in managed storage — consistent with the
 single-source-of-truth model.
 
+## Identity, authentication, and data handling
+
+**Authentication.** Users sign in with **email-based** credentials or via **OAuth**
+(social) sign-in; both are supported. Enterprise **SSO** is left open as a later
+option for when collaboration arrives.
+
+**Privacy posture (baseline).** Agents may use **third-party hosted model APIs** for
+any work, used only under **no-training / zero-retention** terms. Self-hosting
+open-source models (NFR-7) is an **optimization**, not a requirement. The
+architecture is kept ready — but not yet built — for **per-workspace/project privacy
+levels** that would confine sensitive content to self-hosted models; this rests on
+the per-agent model sourcing already in NFR-7.
+
+**Core safeguards.**
+
+- **TLS in transit** and **encryption at rest** (handled by the managed PaaS).
+- Connector credentials and model API keys live in a **managed secret store**,
+  **never in the knowledge base**.
+- Any third-party model provider is used only under **no-training / zero-retention**
+  terms.
+
+**Retention.** The knowledge base persists permanently until the user changes or
+deletes it (NFR-1). Retention of **raw inputs** (uploaded documents, transcripts)
+and of **conversation history** is **deferred** to the capture-pipeline and
+conversation-state decisions (see Open questions).
+
 ## Requirements
 
 > A first pass derived from the decisions above. Requirements are stated only
@@ -561,6 +587,15 @@ single-source-of-truth model.
 - **NFR-7** **Model sourcing.** The platform supports both **third-party hosted
   model APIs** and **self-hosted open-source models** on its own infrastructure,
   selectable **per agent** (reinforces FR-20 and NFR-4).
+- **NFR-8** **Authentication.** Users authenticate via **email-based** sign-in or
+  **OAuth** (social) sign-in; enterprise SSO is a future option.
+- **NFR-9** **Data protection.** Data is encrypted **in transit (TLS)** and **at
+  rest**; connector credentials and model API keys are held in a **managed secret
+  store**, never in the knowledge base.
+- **NFR-10** **Third-party model use.** Third-party model providers are used only
+  under **no-training / zero-retention** terms. The baseline permits third-party
+  APIs for all agents; **per-workspace/project privacy levels** that confine
+  sensitive content to self-hosted models (NFR-7) are a reserved future extension.
 
 ## Open questions
 
@@ -607,8 +642,9 @@ lost, and resolve them into the sections above as decisions are made._
   prioritization, reminders, calendars, etc.) are intentionally deferred. The
   planning agent was introduced only as an example of an orchestrated specialized
   agent; taking it up later will require dedicated agent specialization.
-- **Data handling and privacy (next to decide).** Cloud hosting (NFR-6) means user
-  data resides in the platform's cloud and may flow to model providers. The privacy
-  posture — what data may leave to third-party models versus stay on self-hosted
-  open-source models (NFR-7), encryption at rest and in transit, retention, and how
-  the user authenticates to the platform — is the next foundational decision.
+- **Data retention specifics (deferred).** The privacy posture, authentication, and
+  core safeguards are decided (see Identity, authentication, and data handling).
+  Still open: retention of **raw inputs** (uploaded documents, transcripts) and of
+  **conversation history** — to be pinned with the capture-pipeline and
+  conversation-state decisions. Per-workspace/project **privacy levels** remain a
+  reserved future extension, not yet designed.
