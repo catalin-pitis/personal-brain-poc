@@ -76,6 +76,12 @@ decided; terms still under discussion are marked as open._
   platforms. For placing and organizing tasks *within* the external platform, the
   connector additionally maps a Personal Brain project to that platform's native
   structure — its own projects or sections.
+- **Tool** — an operation, provided through **MCP**, that **reads or writes
+  data**. Tools span both the external task platform (creating, updating, and
+  querying tasks) and the knowledge base (reading and writing project and
+  workspace information). Tools are the unit at which **autonomy** is configured:
+  the user can let some tools run automatically — for example, read-only ones —
+  while others still require confirmation.
 
 ## Workspaces and projects
 
@@ -190,10 +196,12 @@ the orchestration selects the right agents on their behalf.
 
 The knowledge base holds **project information** and is the single source of
 truth for it. **Tasks live outside** the knowledge base, in an external
-task-management platform that the product integrates with through tools (via
-MCP). Agents act on tasks there rather than storing them locally. Every task
-belongs to a project, and Personal Brain records this in its own internal
-**project↔task mapping** rather than relying on the external platform's
+task-management platform. Both are accessed through **tools** (via MCP): agents
+read through them, and the orchestrator applies writes under the configured
+autonomy. Agents act on tasks in the external platform rather than storing them
+locally. Every task belongs to a project, and Personal Brain records this in its
+own internal **project↔task mapping** rather than relying on the external
+platform's
 structure, so the link holds across whatever platform is connected.
 
 Capture crosses the knowledge/task boundary in **both directions**. A single
@@ -410,6 +418,8 @@ exact mechanics are refined below and in Requirements as they are worked out.
   confirmation** before taking effect.
 - **FR-23** The user can grant **full autonomy**, or **auto-approve specific
   tools** (for example, tools that only read data) while still confirming others.
+  A **tool** is an MCP read/write operation over the knowledge base or the task
+  platform.
 
 ### Non-functional
 
