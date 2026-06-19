@@ -14,7 +14,7 @@ user manually structuring information, the user communicates in natural language
 typed or spoken — and by sharing documents, and an agent maintains a structured
 knowledge base on their behalf. The intent is to shift the user's time away from
 organizing information and toward thinking and making decisions based on a
-knowledge base that is always current.
+knowledge base the agent keeps current for them.
 
 Two jobs sit at the core of the product:
 
