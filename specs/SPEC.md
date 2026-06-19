@@ -48,13 +48,16 @@ decided; terms still under discussion are marked as open._
   agents needed, combines their work, and applies the result under the configured
   autonomy. When it cannot determine the target project confidently, it asks the
   user.
-- **Workspace** — a grouping of projects, and the top-level container in the
-  knowledge base. A workspace may hold information common to all the projects
-  within it (for example, contact persons and their roles), so shared context is
-  not repeated in each project.
+- **Workspace** — a **logical grouping** of projects that the user defines (for
+  example, by client or by theme), and the top-level container in the knowledge
+  base. A workspace may hold information common to all the projects within it (for
+  example, contact persons and their roles), so shared context is not repeated in
+  each project.
 - **Project** — a larger, longer-lived effort the user works toward, and the
   primary unit around which information is organized. Every project belongs to a
-  workspace.
+  workspace. A project has a **status** (for example, *preparing*, *active*, or
+  *closed*) that, among other things, scopes which projects normal requests
+  consider.
 - **Activity** — a task: a discrete unit of work the user does. Every task
   belongs to a project. Tasks are **not** stored in the knowledge base; they are
   managed in an external task-management platform that Personal Brain integrates
@@ -66,6 +69,12 @@ decided; terms still under discussion are marked as open._
   whatever task-management platform they use, so the integration is pluggable (an
   MCP connector is the intended mechanism). Agents act on tasks there on the
   user's behalf.
+- **Project↔task mapping** — Personal Brain's own internal, authoritative record
+  of which external task belongs to which project. Keeping the association inside
+  Personal Brain makes the link robust and uniform across different task
+  platforms. For placing and organizing tasks *within* the external platform, the
+  connector additionally maps a Personal Brain project to that platform's native
+  structure — its own projects or sections.
 
 ## Workspaces and projects
 
@@ -73,10 +82,24 @@ Projects are grouped into **workspaces**. A workspace is the top-level container
 in the knowledge base, and every project belongs to one. The hierarchy is
 therefore *workspace → project → project information*.
 
+A workspace is a **logical grouping the user chooses**; the platform does not
+dictate the grouping criterion. For example, a workspace might represent a
+**client**, with the various projects and initiatives for that client grouped
+inside it; or it might represent a **theme** such as *investments*, where each
+project corresponds to an individual investment. The grouping exists both to share
+context across related projects and to keep them organized together.
+
 A workspace may also hold information **common to all its projects** — for
 example, the contact persons involved and their roles — so that shared context
-does not have to be repeated in each project. Within a workspace, each project
-then carries its own information, structured as described below.
+does not have to be repeated in each project. Unlike a project, this
+workspace-level common information does **not follow a predefined structure**; it
+holds whatever shared context is relevant, in a flexible form. Within a workspace,
+each project then carries its own information, structured as described below.
+
+Workspaces — and the projects within them — can be **created and managed by
+chatting with the agent**, consistent with the agent-mediated model: the user asks
+the agent to set up or reorganize the grouping rather than only editing structure
+by hand.
 
 ## Project information
 
@@ -92,12 +115,19 @@ The minimal built-in sections are:
 - **Project log** — a chronological history of what has happened on the project,
   for reference.
 
-Beyond these, the user can add their own sections — for example status
-information, KPIs, or anything else worth tracking about the project.
+Beyond these, the user can add their own sections — for example KPIs, a risk
+list, or anything else worth tracking about the project. (This is distinct from a
+project's lifecycle status, described below.)
 
 The agents maintain these sections as information comes in. Because the structure
 (including any custom sections) is part of the knowledge base, it is directly
 readable by the user.
+
+Each project also has a **status** — for example *preparing*, *active*, or
+*closed*. Status affects scope: by default, **normal requests exclude closed
+projects** (for instance, a cross-project status query or the routing of new input
+considers only active and preparing projects), while the user can still include
+closed projects explicitly when needed.
 
 ## How it works: agents and the knowledge base
 
@@ -116,9 +146,14 @@ Agents are specialized along two axes, which can combine:
 
 - **By kind of work** — agents that carry out the platform's core mechanisms,
   such as **retrieval** and **Q&A** agents that underpin knowledge update and
-  processing, and the **planning agent**.
+  processing.
 - **By subject/domain** — agents with expertise in a particular domain, such as a
   **finance agent** that computes KPIs to include in a project's information.
+
+A **finance agent** (domain) and a **planning agent** for organizing tasks
+(kind of work) are illustrative examples of further specialized agents that could
+be orchestrated; they are not committed components, and their capabilities are not
+specified in this iteration.
 
 Agents are **not** specialized per project; no agent is tied to an individual
 project. Orchestration draws on the relevant work-type and domain agents to
@@ -150,14 +185,10 @@ the orchestration selects the right agents on their behalf.
 The knowledge base holds **project information** and is the single source of
 truth for it. **Tasks live outside** the knowledge base, in an external
 task-management platform that the product integrates with through tools (via
-MCP). Agents act on tasks there rather than storing them locally.
-
-A dedicated **planning agent** helps the user organize their tasks **across
-projects**, working **through a conversation** with the user. It operates over
-the tasks in the external platform — which may span several projects — and helps
-the user decide how to organize them interactively, rather than applying a fixed
-algorithm. The finer capabilities it offers (e.g. prioritization, scheduling,
-surfacing what is next or overdue) are still to be defined.
+MCP). Agents act on tasks there rather than storing them locally. Every task
+belongs to a project, and Personal Brain records this in its own internal
+**project↔task mapping** rather than relying on the external platform's
+structure, so the link holds across whatever platform is connected.
 
 Capture crosses the knowledge/task boundary in **both directions**. A single
 input — for example shared meeting notes — may **both** update project
@@ -165,7 +196,9 @@ information **and** create or update tasks in the external platform: conclusions
 update the knowledge base while action items become tasks. Conversely, when a
 task changes or is completed in the external platform, that change is **reflected
 back** into the knowledge base (for example as a Project log entry, or by
-resolving an Open topic).
+resolving an Open topic). Personal Brain reconciles such changes when the user
+next interacts with the affected project, and sooner where the connector can push
+change events.
 
 How much the agents act on their own is **configurable**. By default, an agent
 **proposes** its changes and the user must **confirm** them before they take
@@ -181,6 +214,29 @@ often a faster and more natural way to capture what happened than writing it out
 Importantly, agent mediation applies to *maintaining* the knowledge base, not to
 *accessing* it: the user is always able to read the project information directly,
 without an agent in the loop.
+
+### The agent roster
+
+The committed core is deliberately **small**:
+
+- **Orchestrator** — the sole entry point; resolves the target project, selects
+  and invokes agents, combines their results, and applies changes under the
+  configured autonomy.
+- **Retrieval agent** — finds the relevant project(s) and existing information in
+  the knowledge base. The orchestrator relies on it to identify which project an
+  input concerns.
+- **Q&A agent** — assembles answers and contextual information from the knowledge
+  base in response to the user's questions.
+
+**Extraction** (turning raw notes or transcripts into structured updates and
+spotting action items) and **writing** (deciding what to change in which section)
+are treated as **capabilities the orchestrator coordinates**, not as separate
+agents.
+
+Beyond this core, the roster can grow with **additional specialized agents** — by
+subject/domain (for example, a finance agent) or by kind of work (for example, a
+planning agent) — defined as part of the product when needed. These additions are
+not part of the committed core.
 
 ### Supported interaction patterns
 
@@ -209,9 +265,9 @@ exact mechanics are refined below and in Requirements as they are worked out.
 5. **Direct reading.** The user reads the project information directly, without
    the agent in the loop.
 
-6. **Task planning.** Through a conversation with the planning agent, the user
-   organizes their tasks across projects — reviewing and arranging the work that
-   lives in the external task-management platform.
+6. **Structural management.** The user creates or reorganizes workspaces and
+   projects by asking the agent — for example, setting up a new client workspace,
+   opening a project within it, or marking a project as closed.
 
 ## Requirements
 
@@ -224,18 +280,25 @@ exact mechanics are refined below and in Requirements as they are worked out.
 
 - **FR-1** The platform organizes knowledge as a hierarchy of **workspaces →
   projects → per-project named sections**.
-- **FR-2** Every project belongs to a workspace. _(Whether a project may belong
-  to more than one workspace is open.)_
+- **FR-2** Every project belongs to **exactly one** workspace; a workspace may
+  contain many projects.
 - **FR-3** Each project starts from a minimal built-in structure consisting of
   the sections **Open topics**, **Decisions**, and **Project log**.
 - **FR-4** The user can add **custom sections** to a project to track additional
-  information (for example, status or KPIs).
+  information (for example, KPIs or a risk list).
 - **FR-5** A workspace can hold information **common to all its projects** (for
   example, contact persons and their roles).
 - **FR-6** The knowledge base is the **single source of truth** for project and
   workspace information; agents retain no private state outside it.
 - **FR-7** The user can **read** project and workspace information directly,
   without an agent in the loop.
+- **FR-37** Workspace-level common information has **no predefined structure**; it
+  holds shared context in a flexible form (it does not use the project section
+  model).
+- **FR-38** Workspaces and projects are **created and managed conversationally**,
+  by chatting with the agent.
+- **FR-39** Each project has a **status** (for example, *preparing*, *active*,
+  *closed*).
 
 ### Capture
 
@@ -250,33 +313,47 @@ exact mechanics are refined below and in Requirements as they are worked out.
   tasks while conclusions update the knowledge base).
 - **FR-12** Changes to a task in the external platform (for example, completion)
   are **reflected back** into the knowledge base (for example, a Project log entry
-  or resolution of an Open topic). _(Sync mechanism is open.)_
+  or resolution of an Open topic). See FR-30 for timing.
 
 ### Retrieval
 
 - **FR-13** The user can ask an agent for **contextual information** about a
   project (for example, its status or open points) and receive the requested
   details.
+- **FR-40** By default, **normal requests exclude closed projects** from their
+  scope; the user can include them explicitly when needed.
 
 ### Tasks and planning
 
 - **FR-14** Tasks are stored in an **external task-management platform**, not in
   the knowledge base.
-- **FR-15** Every task is **associated with a project**. _(How the association is
-  represented and kept in sync is open.)_
+- **FR-15** Every task is **associated with a project**. Personal Brain maintains
+  this association in its own internal **project↔task mapping**, independent of
+  the external platform's organizational features. See FR-30 for sync timing.
 - **FR-16** The platform integrates with the task-management platform through a
   **configurable, pluggable connector** (MCP is the intended mechanism).
   _(Minimum connector capabilities are open.)_
-- **FR-17** A **planning agent** helps the user organize tasks **across projects**
-  through conversation. _(Its finer capabilities — prioritization, scheduling,
-  surfacing what is next or overdue — are open.)_
+- **FR-17** Organizing tasks across projects remains an intended capability,
+  expected to be delivered by a specialized agent. Its specifics are **deferred**
+  in this iteration; the planning agent stands only as an example of an
+  orchestrated specialized agent, not a committed component.
+- **FR-30** Personal Brain reconciles external task changes into the knowledge
+  base **when the user interacts** with the affected project (baseline), and
+  **sooner via pushed events** where the connector supports them. It does not rely
+  on constant polling.
+- **FR-31** When a task is created for a project, the **connector places it in the
+  external platform's native structure** (project or section) corresponding to
+  that Personal Brain project. Mapping the project to the platform's structures is
+  the connector's responsibility.
 
 ### Agents and orchestration
 
 - **FR-18** The platform provides **multiple specialized agents**, defined as part
   of the product. End users do not define, configure, or compose agents.
 - **FR-19** The platform **orchestrates** its agents — selecting the appropriate
-  agent(s) for an input and combining their outputs. _(Routing logic is open.)_
+  agent(s) for an input and combining their outputs. _(The orchestrator model is
+  specified in FR-26–29; the project-inference confidence threshold remains
+  open.)_
 - **FR-20** Different agents may be powered by **different underlying models**.
 - **FR-24** Agents are specialized by **kind of work** (for example, retrieval,
   Q&A, planning) and by **subject/domain** (for example, a finance agent that
@@ -295,6 +372,17 @@ exact mechanics are refined below and in Requirements as they are worked out.
 - **FR-29** Agents return their results to the orchestrator, which applies the
   changes to the knowledge base; no agent writes to the knowledge base
   independently of the orchestrator.
+- **FR-32** The committed core roster consists of the **orchestrator**, a
+  **retrieval agent**, and a **Q&A agent**.
+- **FR-33** **Extraction** (structuring raw input, identifying action items) and
+  **writing** (choosing what to change in which section) are capabilities
+  coordinated by the orchestrator, not separate agents.
+- **FR-34** The orchestrator identifies the target project with the help of the
+  **retrieval agent** (searching the knowledge base); there is no separate
+  classifier agent.
+- **FR-35** The roster may be extended with **additional specialized agents** (by
+  domain or by kind of work), defined as part of the product; such additions are
+  beyond the committed core.
 
 ### Autonomy and control
 
@@ -321,31 +409,29 @@ exact mechanics are refined below and in Requirements as they are worked out.
 _Things that are ambiguous or not yet decided. We track them here so they aren't
 lost, and resolve them into the sections above as decisions are made._
 
-- **Workspace details.** Projects are grouped into workspaces, which can hold
-  common information. Still to decide: whether a project can belong to more than
-  one workspace, what kinds of common information a workspace holds (contacts and
-  roles are one example), and how workspaces are created and managed.
+- **Project status set.** Projects have a status (for example, preparing, active,
+  closed). Whether this exact set is final or extensible, and the precise rules
+  for how each status affects scope and agent behavior, are not yet pinned down.
 - **Scope of project customization.** Custom sections are supported. It is not
   yet decided whether they are defined per individual project or as reusable
   templates shared across projects, and who may add or change them (relates to
   roles below).
-- **The concrete roster of agents.** Specialization is by kind of work (e.g.
-  retrieval, Q&A, planning) and by subject/domain (e.g. a finance agent), and not
-  per project. Still to define: the full set of agents the product ships with,
-  and how domain agents (like finance) are invoked within the orchestration and
-  contribute their output back into the knowledge base.
+- **Future additions to the roster.** The committed core is the orchestrator,
+  retrieval, and Q&A agents, with extraction and writing coordinated by the
+  orchestrator. Still open: which additional specialized agents (by domain or kind
+  of work) the product will add, and the mechanics by which a new agent plugs into
+  the orchestration (how it is selected and how its output is integrated).
 - **Orchestration details.** The orchestrator model is settled (single entry
   point; resolve the project from explicit indication, inference, or by asking the
   user; select and invoke agents; agents return results to the orchestrator, which
   applies changes under the autonomy policy). Still to refine: how confidently the
   orchestrator must infer a project before acting rather than asking the user.
-- **What a task connector must support.** The task integration is a pluggable
-  connector. The minimum capabilities a connector must provide (e.g. create,
-  update, query tasks) and how differences between platforms are handled are not
-  yet specified.
-- **How projects and tasks link.** Projects live in the knowledge base; tasks
-  live externally. How a task is associated with a project, and how that
-  association is created and kept in sync, is not yet specified.
+- **Task connector capability contract.** A connector must let agents create,
+  update, and query tasks; map a Personal Brain project to the platform's native
+  project or section; and, where available, deliver task-change events. The
+  precise minimum contract — and how to handle platforms that lack a capability
+  (for example, no event push) — is still to be specified. (Each platform is
+  assumed to provide projects or sections to map onto.)
 - **Voice output.** Spoken input is supported. It is not yet decided whether the
   agents also respond by voice, or whether voice is input-only.
 - **Roles, collaboration, and sharing (future direction).** Multi-user
@@ -356,6 +442,8 @@ lost, and resolve them into the sections above as decisions are made._
   roles and permissions (an **administrator** role has been mentioned for
   configuring connectors), and how concurrent contributions are handled. The
   current design should avoid choices that would preclude this later.
-- **Planning capabilities.** What "organize activities and plan" concretely
-  means (scheduling, prioritization, reminders, calendars, etc.) is not yet
-  specified.
+- **Planning capabilities (deferred).** Planning — organizing tasks across
+  projects — remains a product aim, but its concrete capabilities (scheduling,
+  prioritization, reminders, calendars, etc.) are intentionally deferred. The
+  planning agent was introduced only as an example of an orchestrated specialized
+  agent; taking it up later will require dedicated agent specialization.
