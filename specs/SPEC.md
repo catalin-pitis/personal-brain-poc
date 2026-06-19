@@ -202,6 +202,33 @@ Two consequences follow:
   block, what the user edits is exactly what is stored and shown; there is no lossy
   translation back into sub-entities.
 
+## History, versioning, and concurrency
+
+The knowledge base is written by more than one party — agents (via the
+orchestrator), direct hand-edits, and reconciliation from task events — and from
+more than one device. The **block is the unit of writing**, and the platform manages
+change at that granularity.
+
+**Versioning.** Every change to a block produces a **new version**, and the platform
+**keeps the full version history** of each block. History is what makes an
+agent-maintained knowledge base trustworthy: changes are reviewable and recoverable.
+
+**Audit trail.** Each version records the **actor** (the user, a specific agent, or
+reconciliation), a **timestamp**, and a **link to what caused it** — the originating
+source artifact (FR-49) or task event. The history therefore doubles as an audit
+trail: "why did this change?" is always answerable, reinforcing transparency
+(NFR-2).
+
+**Concurrency.** Writes use **optimistic concurrency** at block granularity. A write
+states the block version it was based on; if the block has since moved on, the stale
+write is **rejected and re-driven** rather than silently overwriting — an agent
+re-reads and re-proposes, and a conflicting hand-edit is flagged to the user. A
+proposal waiting in the review queue (FR-47) is likewise applied against the
+**current** version, so a block edited after the proposal was made is caught.
+
+**Undo.** The user can **revert a block to a prior version**; the revert is itself
+recorded as a new version.
+
 ## How it works: agents and the knowledge base
 
 Agents are the primary means of **maintaining** the knowledge base. The user
@@ -576,6 +603,21 @@ conversation-state decisions (see Open questions).
   nor the agents access it directly), while the **agent is optional in the loop**:
   direct hand-editing edits the human-readable representation through a platform
   surface and **round-trips losslessly** (refines FR-41).
+
+### History, versioning, and concurrency
+
+- **FR-57** Every change to a block produces a **new version**; the platform keeps
+  the **full per-block version history**.
+- **FR-58** Each version records the **actor** (the user, a specific agent, or
+  reconciliation), a **timestamp**, and a **link to the originating input** (source
+  artifact, FR-49) or task event; the history serves as the **audit trail** (NFR-2).
+- **FR-59** Writes use **optimistic concurrency at block granularity**: a write
+  carries the base block version, and a **stale write is rejected and re-driven**
+  (the agent re-reads and re-proposes; a conflicting hand-edit is flagged) rather
+  than silently overwriting. Queued proposals (FR-47) are applied against the
+  **current** version.
+- **FR-60** The user can **revert a block to a prior version**; the revert is
+  recorded as a new version.
 
 ### Capture
 
