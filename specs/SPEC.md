@@ -364,8 +364,9 @@ exact mechanics are refined below and in Requirements as they are worked out.
   this association in its own internal **project↔task mapping**, independent of
   the external platform's organizational features. See FR-30 for sync timing.
 - **FR-16** The platform integrates with the task-management platform through a
-  **configurable, pluggable connector** (MCP is the intended mechanism).
-  _(Minimum connector capabilities are open.)_
+  **configurable, pluggable connector** (MCP is the intended mechanism). The
+  current scope assumes a **single connected task platform**; supporting more than
+  one is an open question. _(Minimum connector capabilities are open.)_
 - **FR-17** Organizing tasks across projects remains an intended capability,
   expected to be delivered by a specialized agent. Its specifics are **deferred**
   in this iteration; the planning agent stands only as an example of an
@@ -472,6 +473,11 @@ lost, and resolve them into the sections above as decisions are made._
   precise minimum contract — and how to handle platforms that lack a capability
   (for example, no event push) — is still to be specified. (Each platform is
   assumed to provide projects or sections to map onto.)
+- **Number of task platforms.** The current scope assumes a **single connected
+  task-management platform** for the user. Whether a user could connect more than
+  one — for example, a different platform per workspace, or a per-project choice —
+  is not yet decided. Supporting multiple would require the project↔task mapping
+  and task routing to record which platform each task lives in.
 - **Roles, collaboration, and sharing (future direction).** Multi-user
   collaboration — sharing a project's (or workspace's) information between users —
   is a planned future direction, not part of the current scope. The current
