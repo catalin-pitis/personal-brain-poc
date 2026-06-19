@@ -31,7 +31,9 @@ _The shared vocabulary of the product. Definitions are filled in as they are
 decided; terms still under discussion are marked as open._
 
 - **Knowledge base** — the persistent, structured store of information about the
-  user's projects. It is the **single source of truth**: agents read from it and
+  user's projects; the platform **owns and hides its underlying storage form**,
+  exposing the knowledge base in a stable, human-readable representation (see
+  Knowledge base representation). It is the **single source of truth**: agents read from it and
   keep no private state of their own, so everything an agent "knows" is visible to
   the user. Agent-driven changes are applied through the orchestrator (see
   Orchestration); the user can also read **and edit** the knowledge base
@@ -59,6 +61,11 @@ decided; terms still under discussion are marked as open._
   workspace. A project has a **status** (for example, *preparing*, *active*, or
   *closed*) that, among other things, scopes which projects normal requests
   consider.
+- **Section (block)** — a named unit of project information, modeled as a single
+  **block** of human-readable content (Markdown). A project is an ordered
+  collection of such blocks. Structure *within* a block is content the agent and
+  user maintain; the platform does not model the items inside it (see Knowledge
+  base representation).
 - **Task** — a discrete unit of work the user does. Every task belongs to a
   project. Tasks are **not** stored in the knowledge base; they are managed in an
   external task-management platform that Personal Brain integrates with. Tasks are
@@ -142,6 +149,58 @@ Each project also has a **status** — for example *preparing*, *active*, or
 projects** (for instance, a cross-project status query or the routing of new input
 considers only active and preparing projects), while the user can still include
 closed projects explicitly when needed.
+
+## Knowledge base representation
+
+The platform **owns and hides** how the knowledge base is stored. Whatever the
+underlying store, the platform exposes — and accepts — knowledge in a stable,
+**human-readable representation**: content is expressed in **Markdown**, which is
+readable, hand-editable, portable, and able to carry structure by convention
+(headings, lists, checkboxes) without imposing a rigid schema.
+
+This separates two kinds of mediation that the spec previously blurred:
+
+- **Storage mediation is always present.** Neither the user nor the agents touch
+  the underlying store; everything goes through the platform.
+- **Agent mediation is optional.** Agent-maintained updates and direct
+  hand-editing both go through the platform and operate on the same human-readable
+  content; the difference is only whether an agent is in the loop.
+
+### Content model: blocks
+
+Information is modeled as **blocks**:
+
+- A **section is one block** of human-readable content.
+- A **project is an ordered collection of named blocks**, plus project-level
+  metadata such as its status.
+- A **workspace is a collection of projects**, plus its common information — itself
+  block(s) in the flexible, no-predefined-structure form (FR-37).
+- The built-in sections (Open topics, Decisions, Project log) are **not special**:
+  they are blocks the platform **seeds by default**, and custom sections are more
+  blocks of the same kind.
+
+This draws one deliberate line:
+
+> **Structure *between* blocks is the platform's concern; structure *within* a
+> block is content.**
+
+The platform knows about workspaces, projects, and named sections, and gives them
+**stable identity** — projects in particular need it for the project↔task mapping.
+It does **not** model the items *inside* a block. "Open topics" is a block listing
+topics; the agent and the user maintain that internal structure — including whether
+a topic is open or resolved — as **content** (for example, a list or checkboxes),
+not as platform-tracked entities with their own state.
+
+Two consequences follow:
+
+- **Resolving an Open topic** (FR-12) means the responsible agent **edits the
+  block**, not a state transition on a tracked entity. The link from an external
+  task back to the topic it originated from is a **semantic association the agent
+  re-derives**, optionally reinforced by a lightweight reference the agent writes
+  **into the block content** itself — not a stored foreign key.
+- **Hand-editing round-trips losslessly.** Because a section's content *is* the
+  block, what the user edits is exactly what is stored and shown; there is no lossy
+  translation back into sub-entities.
 
 ## How it works: agents and the knowledge base
 
@@ -234,9 +293,12 @@ Voice is supported for **input only**; the agents respond in text, not by voice.
 
 Importantly, the agents are the **primary** way to maintain the knowledge base,
 but not the only one: the user can always **read and edit** the project
-information directly, by hand, without an agent in the loop. Agent-mediated
-maintenance and direct editing operate on the same single source of truth, so
-hand edits are immediately visible to the agents (which keep no private state).
+information directly, by hand — editing the human-readable representation through a
+platform surface, **not** by touching the underlying store, which the platform
+always mediates. This makes *agent mediation* optional while *storage mediation* is
+always present. Agent-mediated maintenance and direct editing operate on the same
+single source of truth, so hand edits are immediately visible to the agents (which
+keep no private state).
 
 ### The agent roster
 
@@ -330,6 +392,23 @@ exact mechanics are refined below and in Requirements as they are worked out.
   projects, workspaces) — without an agent in the loop. Agent-mediated maintenance
   (FR-9) and direct editing both operate on the same single source of truth, so
   each path immediately sees the other's changes.
+- **FR-42** The platform **owns and hides the underlying storage form** of the
+  knowledge base, exposing and accepting knowledge in a stable, **human-readable
+  representation (Markdown)**.
+- **FR-43** Project information is modeled as **blocks**: each **section is one
+  block** of human-readable content; a **project is an ordered collection of named
+  blocks** plus project-level metadata (such as status); a **workspace is a
+  collection of projects** plus common-information block(s). The built-in sections
+  are blocks the platform **seeds by default**.
+- **FR-44** The platform models structure **between** blocks — workspaces,
+  projects, and named sections — and gives these **stable identity** (projects in
+  particular, for the project↔task mapping). Structure **within** a block,
+  including the open/resolved state of topics, is **content** maintained by the
+  agent and user, **not** platform-tracked entities.
+- **FR-45** The platform **always mediates the underlying store** (neither the user
+  nor the agents access it directly), while the **agent is optional in the loop**:
+  direct hand-editing edits the human-readable representation through a platform
+  surface and **round-trips losslessly** (refines FR-41).
 
 ### Capture
 
@@ -344,7 +423,10 @@ exact mechanics are refined below and in Requirements as they are worked out.
   tasks while conclusions update the knowledge base).
 - **FR-12** Changes to a task in the external platform (for example, completion)
   are **reflected back** into the knowledge base (for example, a Project log entry
-  or resolution of an Open topic). See FR-30 for timing.
+  or resolution of an Open topic). See FR-30 for timing. Resolving an Open topic is
+  realized by the agent **editing the block** (FR-44); the task→topic link is a
+  **semantic association** (optionally reinforced by an in-content reference), not a
+  stored foreign key.
 - **FR-36** Voice is supported for **input only**; agents respond in text, not by
   voice.
 
