@@ -354,6 +354,44 @@ exact mechanics are refined below and in Requirements as they are worked out.
    projects by asking the agent — for example, setting up a new client workspace,
    opening a project within it, or marking a project as closed.
 
+## Conversation and interaction state
+
+The product is used through a conversation, so the platform keeps **interaction
+state** — but this is deliberately distinct from the **knowledge** in the knowledge
+base, and that distinction is what keeps the single-source-of-truth principle
+(FR-6) intact.
+
+- **Knowledge** — project and workspace facts — lives in the **knowledge base**,
+  the single source of truth. Anything worth remembering about a project is
+  distilled into it.
+- **Interaction state** — the conversation transcript and the orchestrator's
+  in-flight state (a pending clarification, or a proposed change awaiting
+  confirmation) — is a **separate concern**, not knowledge.
+
+So "agents keep no private state" (FR-6) is about *knowledge*: there is no project
+fact an agent holds that the knowledge base does not. A conversation log is not
+private agent memory — it is the user's own chat, fully visible (consistent with
+NFR-2), and it is not where project facts live. Agents stay **grounded in the
+knowledge base**; recent conversation serves only as **immediate context** within
+an exchange, never as a long-term memory the knowledge base does not also hold.
+
+Three decisions follow:
+
+- **Conversation history is persisted** across sessions, as a **log** the user can
+  revisit — explicitly **not** a knowledge source. (Its retention is part of the
+  raw-input retention still to be decided; see Open questions.)
+- Interaction happens in a **single assistant conversation**, not per-project
+  threads: a single input routinely spans several projects (FR-10), while
+  per-project knowledge is found in the knowledge base, organized by project.
+  (Threads remain a possible future refinement.)
+- Proposed changes awaiting confirmation form a **durable review queue**. Under the
+  default propose-and-confirm autonomy (FR-22), a change the user does not confirm
+  immediately **survives** for review later, and an in-flight clarification likewise
+  survives a dropped connection — which is what makes confirm-by-default usable for
+  asynchronous, mobile capture. This is the one piece of **authoritative state
+  beyond the knowledge base**: a store of pending proposals, persisted **durably
+  until resolved**.
+
 ## Deployment and infrastructure
 
 Personal Brain is delivered as a **cloud-hosted service**. The backend, its
@@ -566,6 +604,15 @@ conversation-state decisions (see Open questions).
   A **tool** is an MCP read/write operation over the knowledge base or the task
   platform.
 
+### Conversation and interaction state
+
+- **FR-46** Interaction happens in a **single assistant conversation** (not
+  per-project threads); the platform **persists conversation history** as a **log**
+  the user can revisit, which is **not** a knowledge source.
+- **FR-47** Under the default propose-and-confirm autonomy (FR-22), unconfirmed
+  proposed changes are held in a **durable review queue** the user can act on later,
+  and in-flight clarifications **survive across sessions and reconnects**.
+
 ### Non-functional
 
 - **NFR-1** **Persistence.** Knowledge base information — and Personal Brain's
@@ -596,6 +643,12 @@ conversation-state decisions (see Open questions).
   under **no-training / zero-retention** terms. The baseline permits third-party
   APIs for all agents; **per-workspace/project privacy levels** that confine
   sensitive content to self-hosted models (NFR-7) are a reserved future extension.
+- **NFR-11** **Interaction state.** **Knowledge** (in the knowledge base, FR-6) and
+  **interaction state** (conversation transcript, pending proposals, in-flight
+  clarifications) are distinct. Agents are **grounded in the knowledge base**;
+  recent conversation is only immediate context, never long-term memory the
+  knowledge base lacks. Conversation history persists as a **log**; pending
+  proposals and clarifications persist **durably until resolved**.
 
 ## Open questions
 
@@ -645,6 +698,6 @@ lost, and resolve them into the sections above as decisions are made._
 - **Data retention specifics (deferred).** The privacy posture, authentication, and
   core safeguards are decided (see Identity, authentication, and data handling).
   Still open: retention of **raw inputs** (uploaded documents, transcripts) and of
-  **conversation history** — to be pinned with the capture-pipeline and
-  conversation-state decisions. Per-workspace/project **privacy levels** remain a
-  reserved future extension, not yet designed.
+  **conversation history** (the persisted log; see Conversation and interaction
+  state) — to be pinned with the capture-pipeline decision. Per-workspace/project
+  **privacy levels** remain a reserved future extension, not yet designed.
