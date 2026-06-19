@@ -544,9 +544,37 @@ the per-agent model sourcing already in NFR-7.
   terms.
 
 **Retention.** The knowledge base persists permanently until the user changes or
-deletes it (NFR-1). Retention of **raw inputs** (uploaded documents, transcripts)
-and of **conversation history** is **deferred** to the capture-pipeline and
-conversation-state decisions (see Open questions).
+deletes it (NFR-1). Raw inputs are retained as source artifacts (FR-49) and
+conversation history as a log (FR-46), both user-deletable; the remaining open item
+is the **retention window / auto-purge policy** (see Open questions).
+
+## Scale, performance, and configuration
+
+**Scale and retrieval.** The product is sized for **single-user scale** — on the
+order of **hundreds of projects** and **thousands of blocks**, each block from a
+paragraph to a few pages. A single project's information typically fits in a model's
+context, but a single input or conversation routinely references **several projects**
+(FR-10), so retrieval does **not** load whole projects: the **retrieval agent
+assembles a working set of the relevant blocks across the identified projects**,
+ranked to fit the context. Because the relevant projects are not always named,
+**semantic search across the knowledge base is a first-class retrieval mechanism** —
+alongside structured navigation (workspace → project → section) and keyword search —
+not merely an optional enhancement, though it stays bounded by the single-user scale
+above.
+
+**Performance.** Targets are **soft guidelines, not SLAs**: interactive operations
+(typed capture, retrieval, Q&A) feel **conversational**, a response beginning within
+a few seconds; **heavy captures** (documents, long audio, fetched pages) run
+**asynchronously** with no interactive deadline, surfacing results in the review
+queue when ready. The platform **favors responsiveness and never losing work** over
+instant completion.
+
+**Configuration scope.** In the current single-user scope, configuration is
+**account-global**: autonomy is set **globally per tool** (FR-21), and the task
+connector and privacy/model-sourcing settings are likewise account-level.
+**Per-workspace scoping** of any of these is a **reserved future extension**, aligned
+with the open questions on multiple task platforms and per-workspace privacy levels.
+Settings persist as authoritative platform state in managed storage.
 
 ## Requirements
 
@@ -662,6 +690,11 @@ conversation-state decisions (see Open questions).
   details.
 - **FR-40** By default, **normal requests exclude closed projects** from their
   scope; the user can include them explicitly when needed.
+- **FR-61** When resolving inputs and answering questions, the **retrieval agent
+  assembles a working set of the relevant blocks across the project(s) an input
+  references** (FR-10) rather than loading whole projects, using **semantic search**,
+  structured navigation, and keyword search, and **ranking results to fit the model
+  context**.
 
 ### Tasks and planning
 
@@ -805,6 +838,17 @@ conversation-state decisions (see Open questions).
   **surfaced and retriable** (FR-53), retained raw inputs permit **re-processing**
   (FR-49), and the knowledge base and task platform **converge to consistency** via
   the mapping and reconciliation (FR-56).
+- **NFR-13** **Scale.** The platform targets single-user scale — order **hundreds of
+  projects** and **thousands of blocks**. Retrieval assembles a working set across
+  the referenced projects rather than loading whole projects (FR-61); **semantic
+  search** across the knowledge base is a first-class mechanism at this scale.
+- **NFR-14** **Performance.** Interactive operations respond **conversationally** (a
+  first response within a few seconds); heavy captures are **asynchronous** with no
+  interactive deadline; the platform favors **responsiveness and durability of work**
+  over instant completion.
+- **NFR-15** **Configuration scope.** Configuration (per-tool autonomy, connector,
+  privacy/model-sourcing) is **account-global** in the current scope; **per-workspace
+  scoping** is a reserved future extension.
 
 ## Open questions
 
