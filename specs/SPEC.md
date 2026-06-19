@@ -33,8 +33,9 @@ decided; terms still under discussion are marked as open._
 - **Knowledge base** — the persistent, structured store of information about the
   user's projects. It is the **single source of truth**: agents read from it and
   keep no private state of their own, so everything an agent "knows" is visible to
-  the user. Changes to it are applied through the orchestrator (see
-  Orchestration), and it is directly readable by the user. (Sharing project
+  the user. Agent-driven changes are applied through the orchestrator (see
+  Orchestration); the user can also read **and edit** the knowledge base
+  directly, by hand, without an agent in the loop. (Sharing project
   information between multiple users is a planned future direction, not part of
   the current scope.)
 - **Agent** — an actor that interprets what the user communicates, decides what
@@ -98,8 +99,9 @@ each project then carries its own information, structured as described below.
 
 Workspaces — and the projects within them — can be **created and managed by
 chatting with the agent**, consistent with the agent-mediated model: the user asks
-the agent to set up or reorganize the grouping rather than only editing structure
-by hand.
+the agent to set up or reorganize the grouping. The user can **also edit the
+structure directly by hand** — both paths are supported and operate on the same
+knowledge base.
 
 ## Project information
 
@@ -122,8 +124,8 @@ list, or anything else worth tracking about the project. (This is distinct from 
 project's lifecycle status, described below.)
 
 The agents maintain these sections as information comes in. Because the structure
-(including any custom sections) is part of the knowledge base, it is directly
-readable by the user.
+(including any custom sections) is part of the knowledge base, the user can read
+**and edit** it directly as well, by hand.
 
 Each project also has a **status** — for example *preparing*, *active*, or
 *closed*. Status affects scope: by default, **normal requests exclude closed
@@ -161,9 +163,11 @@ Agents are **not** specialized per project; no agent is tied to an individual
 project. Orchestration draws on the relevant work-type and domain agents to
 handle a given input.
 
-All user input flows through a single **orchestrator** — the entry point for
-everything the user types, speaks, or uploads; there is no direct path to a
-specific agent. For each input the orchestrator:
+Everything the user **directs to the agents** flows through a single
+**orchestrator** — the entry point for all input the user types, speaks, or
+uploads for the agents to act on; there is no direct path to a specific agent.
+(Editing the knowledge base directly by hand is a separate path that does not
+involve the orchestrator.) For each input the orchestrator:
 
 1. **Resolves the target project(s).** The user may name the project in their
    message; otherwise the orchestrator infers it from the content. If it cannot
@@ -214,9 +218,11 @@ input is supported as a first-class way to interact, because free-form speech is
 often a faster and more natural way to capture what happened than writing it out.
 Voice is supported for **input only**; the agents respond in text, not by voice.
 
-Importantly, agent mediation applies to *maintaining* the knowledge base, not to
-*accessing* it: the user is always able to read the project information directly,
-without an agent in the loop.
+Importantly, the agents are the **primary** way to maintain the knowledge base,
+but not the only one: the user can always **read and edit** the project
+information directly, by hand, without an agent in the loop. Agent-mediated
+maintenance and direct editing operate on the same single source of truth, so
+hand edits are immediately visible to the agents (which keep no private state).
 
 ### The agent roster
 
@@ -265,8 +271,8 @@ exact mechanics are refined below and in Requirements as they are worked out.
    user asks the agent for context — for example, the status of a project or its
    open points — and the agent provides the requested details.
 
-5. **Direct reading.** The user reads the project information directly, without
-   the agent in the loop.
+5. **Direct access.** The user reads — or edits — the project information
+   directly, by hand, without the agent in the loop.
 
 6. **Structural management.** The user creates or reorganizes workspaces and
    projects by asking the agent — for example, setting up a new client workspace,
@@ -299,10 +305,16 @@ exact mechanics are refined below and in Requirements as they are worked out.
 - **FR-37** Workspace-level common information has **no predefined structure**; it
   holds shared context in a flexible form (it does not use the project section
   model).
-- **FR-38** Workspaces and projects are **created and managed conversationally**,
-  by chatting with the agent.
+- **FR-38** Workspaces and projects can be **created and managed
+  conversationally**, by chatting with the agent (and also edited directly by
+  hand; see FR-41).
 - **FR-39** Each project has a **status** (for example, *preparing*, *active*,
   *closed*).
+- **FR-41** The user can also **edit** the knowledge base **directly, by hand** —
+  project and workspace information as well as the structure itself (sections,
+  projects, workspaces) — without an agent in the loop. Agent-mediated maintenance
+  (FR-9) and direct editing both operate on the same single source of truth, so
+  each path immediately sees the other's changes.
 
 ### Capture
 
@@ -366,9 +378,10 @@ exact mechanics are refined below and in Requirements as they are worked out.
   computes KPIs); the two axes may combine.
 - **FR-25** Agents are **not** specialized per project; no agent is tied to an
   individual project.
-- **FR-26** All user input flows through a single **orchestrator** — the entry
-  point for typed, spoken, and uploaded input. There is no direct path to a
-  specific agent.
+- **FR-26** All input the user **directs to the agents** flows through a single
+  **orchestrator** — the entry point for typed, spoken, and uploaded input. There
+  is no direct path to a specific agent. (Direct hand-editing of the knowledge
+  base is a separate path; see FR-41.)
 - **FR-27** The orchestrator resolves the target project(s) for an input from the
   user's explicit indication or by inference; if it cannot determine the project
   confidently, it **asks the user** rather than guessing.
