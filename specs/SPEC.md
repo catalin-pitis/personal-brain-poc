@@ -7,7 +7,7 @@
 ## Overview
 
 Personal Brain helps a user centralize and structure information about their
-projects, and organize and plan their activities (tasks).
+projects, and organize and plan their tasks.
 
 Its defining characteristic is that it is **agent-mediated**. Rather than the
 user manually structuring information, the user communicates in natural language —
@@ -20,7 +20,7 @@ Two jobs sit at the core of the product:
 
 1. **Knowledge** — capturing and structuring information about projects into a
    knowledge base.
-2. **Planning** — organizing activities (tasks) and planning the work.
+2. **Planning** — organizing tasks and planning the work.
 
 These are linked: the planning is about the tasks that advance the same projects
 the knowledge base describes.
@@ -58,10 +58,10 @@ decided; terms still under discussion are marked as open._
   workspace. A project has a **status** (for example, *preparing*, *active*, or
   *closed*) that, among other things, scopes which projects normal requests
   consider.
-- **Activity** — a task: a discrete unit of work the user does. Every task
-  belongs to a project. Tasks are **not** stored in the knowledge base; they are
-  managed in an external task-management platform that Personal Brain integrates
-  with. Activities are what the planning side of the product organizes.
+- **Task** — a discrete unit of work the user does. Every task belongs to a
+  project. Tasks are **not** stored in the knowledge base; they are managed in an
+  external task-management platform that Personal Brain integrates with. Tasks are
+  what the planning side of the product organizes.
 - **Task-management platform** — the external system of record for tasks.
   Personal Brain does not store tasks itself; it reads and updates them through a
   configurable **connector**. The specific platform is not fixed: the user (or,
@@ -261,7 +261,7 @@ exact mechanics are refined below and in Requirements as they are worked out.
    each project the input refers to and updates the related information for each
    one, drawing on the appropriate agent(s).
 
-4. **Contextual retrieval.** When preparing for a meeting or a new activity, the
+4. **Contextual retrieval.** When preparing for a meeting or a new piece of work, the
    user asks the agent for context — for example, the status of a project or its
    open points — and the agent provides the requested details.
 
