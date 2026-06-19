@@ -394,6 +394,42 @@ knowledge base** (agents read before they write): re-sharing similar content upd
 or de-duplicates rather than blindly appending. Duplicate-resistance is a property
 of the extract/write step, not input-level idempotency.
 
+## Reliability and consistency
+
+A single input can produce **multiple effects across two systems** — knowledge-base
+block writes (a store the platform controls) and task changes (an external platform
+it does not). True cross-system atomicity is not achievable, so the platform applies
+effects on a **best-effort, per-effect basis** with **tracked status**:
+
+- **Each effect is applied independently.** A knowledge-base block write or a task
+  change succeeds or fails on its own; successes are durable and are **not** rolled
+  back if a sibling effect fails. There is no all-or-nothing guarantee — across the
+  two systems or even within the knowledge base.
+- **No silent failures.** Any effect that fails to apply — and any input that fails
+  to process — becomes a **retriable item** surfaced to the user. This reuses the
+  **durable review queue** (FR-47), which holds pending *and* failed effects awaiting
+  retry.
+- **Inputs are never lost.** Because raw inputs are retained as source artifacts
+  (FR-49), a processing failure (an agent/model error, a failed link fetch) can be
+  **re-processed**; nothing is left half-interpreted.
+
+**Component unavailability** is handled the same way:
+
+- *Connector unavailable* — knowledge-base effects still apply; task effects wait as
+  retriable items, and **reconciliation (FR-30)** catches up later.
+- *Model/agent failure mid-processing* — the failure is reported and the retained
+  input can be re-processed.
+- *Link fetch failure* — that input fails cleanly and is reported.
+
+**Retry is reconciled.** Retrying a failed task effect is checked against the
+**project↔task mapping** and current state (FR-51) so a partially-succeeded create is
+not duplicated.
+
+The net model is **eventual consistency** between the knowledge base and the external
+task platform: a knowledge-base entry may briefly reference a task not yet created,
+with the **mapping and reconciliation** as the convergence mechanism and every gap
+**visible** to the user rather than silent.
+
 ## Conversation and interaction state
 
 The product is used through a conversation, so the platform keeps **interaction
@@ -669,6 +705,24 @@ conversation-state decisions (see Open questions).
   proposed changes are held in a **durable review queue** the user can act on later,
   and in-flight clarifications **survive across sessions and reconnects**.
 
+### Reliability and consistency
+
+- **FR-52** The effects of an input (knowledge-base block writes and task changes)
+  are applied **best-effort, per effect, with tracked status**; a success is durable
+  and is **not** rolled back if a sibling effect fails. There is **no all-or-nothing
+  guarantee** — across systems or within the knowledge base.
+- **FR-53** **No silent failures:** any failed effect or failed input processing
+  becomes a **retriable item** in the durable review queue (FR-47), and retained raw
+  inputs (FR-49) allow the input to be **re-processed**.
+- **FR-54** When the **task connector is unavailable**, knowledge-base effects still
+  apply and task effects **wait as retriable items**, converging via reconciliation
+  (FR-30).
+- **FR-55** **Retries are reconciled** against the project↔task mapping and current
+  state (FR-51) so a partially-succeeded effect is not duplicated.
+- **FR-56** The knowledge base and the external task platform are **eventually
+  consistent**; the project↔task mapping and reconciliation are the convergence
+  mechanism, and inconsistencies are **surfaced** to the user, not silent.
+
 ### Non-functional
 
 - **NFR-1** **Persistence.** Knowledge base information — and Personal Brain's
@@ -705,6 +759,10 @@ conversation-state decisions (see Open questions).
   recent conversation is only immediate context, never long-term memory the
   knowledge base lacks. Conversation history persists as a **log**; pending
   proposals and clarifications persist **durably until resolved**.
+- **NFR-12** **Reliability.** No input or effect is lost on failure: failures are
+  **surfaced and retriable** (FR-53), retained raw inputs permit **re-processing**
+  (FR-49), and the knowledge base and task platform **converge to consistency** via
+  the mapping and reconciliation (FR-56).
 
 ## Open questions
 
