@@ -7,7 +7,7 @@
 ## Overview
 
 Personal Brain helps a user centralize and structure information about their
-projects and activities, and organize and plan that work.
+projects, and organize and plan their activities (tasks).
 
 Its defining characteristic is that it is **agent-mediated**. Rather than the
 user manually structuring information, the user communicates in natural language —
@@ -212,6 +212,7 @@ tools that *write* (create or modify knowledge or tasks).
 The user can communicate with the agents by **typing or by speaking**. Spoken
 input is supported as a first-class way to interact, because free-form speech is
 often a faster and more natural way to capture what happened than writing it out.
+Voice is supported for **input only**; the agents respond in text, not by voice.
 
 Importantly, agent mediation applies to *maintaining* the knowledge base, not to
 *accessing* it: the user is always able to read the project information directly,
@@ -317,6 +318,8 @@ exact mechanics are refined below and in Requirements as they are worked out.
 - **FR-12** Changes to a task in the external platform (for example, completion)
   are **reflected back** into the knowledge base (for example, a Project log entry
   or resolution of an Open topic). See FR-30 for timing.
+- **FR-36** Voice is supported for **input only**; agents respond in text, not by
+  voice.
 
 ### Retrieval
 
@@ -434,8 +437,6 @@ lost, and resolve them into the sections above as decisions are made._
   precise minimum contract — and how to handle platforms that lack a capability
   (for example, no event push) — is still to be specified. (Each platform is
   assumed to provide projects or sections to map onto.)
-- **Voice output.** Spoken input is supported. It is not yet decided whether the
-  agents also respond by voice, or whether voice is input-only.
 - **Roles, collaboration, and sharing (future direction).** Multi-user
   collaboration — sharing a project's (or workspace's) information between users —
   is a planned future direction, not part of the current scope. The current
