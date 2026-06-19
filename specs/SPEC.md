@@ -81,7 +81,8 @@ decided; terms still under discussion are marked as open._
   querying tasks) and the knowledge base (reading and writing project and
   workspace information). Tools are the unit at which **autonomy** is configured:
   the user can let some tools run automatically — for example, read-only ones —
-  while others still require confirmation.
+  while others still require confirmation. Autonomy is set **per tool** and
+  applies uniformly, regardless of which agent invokes the tool.
 
 ## Workspaces and projects
 
@@ -216,10 +217,12 @@ change events.
 
 How much the agents act on their own is **configurable**. By default, an agent
 **proposes** its changes and the user must **confirm** them before they take
-effect. The user can choose to grant more autonomy — allowing the agent to apply
-changes automatically, either fully or for **specific tools only**. For example,
-the user might auto-approve tools that merely *read* data while still confirming
-tools that *write* (create or modify knowledge or tasks).
+effect. The user can choose to grant more autonomy — allowing changes to apply
+automatically, either fully or for **specific tools only**. For example, the user
+might auto-approve tools that merely *read* data while still confirming tools that
+*write* (create or modify knowledge or tasks). Autonomy is configured **per tool**
+and applies uniformly, regardless of which agent invokes the tool — it is not
+scoped per individual agent.
 
 The user can communicate with the agents by **typing or by speaking**. Spoken
 input is supported as a first-class way to interact, because free-form speech is
@@ -413,7 +416,9 @@ exact mechanics are refined below and in Requirements as they are worked out.
 
 ### Autonomy and control
 
-- **FR-21** The agents' autonomy is **configurable**.
+- **FR-21** The agents' autonomy is **configurable per tool**; a setting applies
+  uniformly regardless of which agent invokes the tool (autonomy is **not** scoped
+  per individual agent).
 - **FR-22** **By default**, an agent's changes are proposed and require **user
   confirmation** before taking effect.
 - **FR-23** The user can grant **full autonomy**, or **auto-approve specific
