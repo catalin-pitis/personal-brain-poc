@@ -99,10 +99,13 @@ context across related projects and to keep them organized together.
 
 A workspace may also hold information **common to all its projects** — for
 example, the contact persons involved and their roles — so that shared context
-does not have to be repeated in each project. Unlike a project, this
-workspace-level common information does **not follow a predefined structure**; it
-holds whatever shared context is relevant, in a flexible form. Within a workspace,
-each project then carries its own information, structured as described below.
+does not have to be repeated in each project. This workspace-level common
+information is **stored and maintained just like project information** — it lives
+in the knowledge base, agents maintain it, and the user can read and edit it
+directly — but, unlike a project, it does **not follow a predefined structure**:
+it does not start from the built-in sections and holds whatever shared context is
+relevant, in a flexible form. Within a workspace, each project then carries its
+own information, structured as described below.
 
 Workspaces — and the projects within them — can be **created and managed by
 chatting with the agent**, consistent with the agent-mediated model: the user asks
@@ -313,9 +316,10 @@ exact mechanics are refined below and in Requirements as they are worked out.
   workspace information; agents retain no private state outside it.
 - **FR-7** The user can **read** project and workspace information directly,
   without an agent in the loop.
-- **FR-37** Workspace-level common information has **no predefined structure**; it
-  holds shared context in a flexible form (it does not use the project section
-  model).
+- **FR-37** Workspace-level common information is stored and maintained the
+  **same way as project information** (in the knowledge base; agent-maintained and
+  directly editable), but has **no predefined structure** — it does not start from
+  the built-in project sections and holds shared context in a flexible form.
 - **FR-38** Workspaces and projects can be **created and managed
   conversationally**, by chatting with the agent (and also edited directly by
   hand; see FR-41).
@@ -428,7 +432,10 @@ exact mechanics are refined below and in Requirements as they are worked out.
 
 ### Non-functional
 
-- **NFR-1** **Persistence.** Knowledge base information persists across sessions.
+- **NFR-1** **Persistence.** Knowledge base information — and Personal Brain's
+  other authoritative state, including the **project↔task mapping** — persists
+  **permanently**: it is retained across sessions and indefinitely, until the user
+  changes or deletes it.
 - **NFR-2** **Transparency.** Everything an agent knows is visible to the user, a
   direct consequence of the single-source-of-truth principle (FR-6).
 - **NFR-3** **Extensibility.** Task connectors are pluggable and custom sections
