@@ -106,7 +106,9 @@ by hand.
 Information about a project is organized into **named sections**. A project
 starts from a **minimal built-in structure** and can be **customized**: the user
 can add sections to track whatever matters for that project. The structure is not
-fixed by the platform beyond a small default.
+fixed by the platform beyond a small default. Customization is **per individual
+project** — each project's sections are its own. _(Reusable **project templates**,
+selectable when a project is created, are a possible future direction.)_
 
 The minimal built-in sections are:
 
@@ -285,7 +287,8 @@ exact mechanics are refined below and in Requirements as they are worked out.
 - **FR-3** Each project starts from a minimal built-in structure consisting of
   the sections **Open topics**, **Decisions**, and **Project log**.
 - **FR-4** The user can add **custom sections** to a project to track additional
-  information (for example, KPIs or a risk list).
+  information (for example, KPIs or a risk list). Customization is **per
+  individual project**; reusable templates are a future direction.
 - **FR-5** A workspace can hold information **common to all its projects** (for
   example, contact persons and their roles).
 - **FR-6** The knowledge base is the **single source of truth** for project and
@@ -412,10 +415,9 @@ lost, and resolve them into the sections above as decisions are made._
 - **Project status set.** Projects have a status (for example, preparing, active,
   closed). Whether this exact set is final or extensible, and the precise rules
   for how each status affects scope and agent behavior, are not yet pinned down.
-- **Scope of project customization.** Custom sections are supported. It is not
-  yet decided whether they are defined per individual project or as reusable
-  templates shared across projects, and who may add or change them (relates to
-  roles below).
+- **Project templates (future).** Custom sections are defined **per individual
+  project**. Reusable project templates — selectable when creating a new project —
+  are a possible future direction, not part of the current scope.
 - **Future additions to the roster.** The committed core is the orchestrator,
   retrieval, and Q&A agents, with extraction and writing coordinated by the
   orchestrator. Still open: which additional specialized agents (by domain or kind
