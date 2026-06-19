@@ -31,19 +31,23 @@ _The shared vocabulary of the product. Definitions are filled in as they are
 decided; terms still under discussion are marked as open._
 
 - **Knowledge base** — the persistent, structured store of information about the
-  user's projects. It is the **single source of truth**: agents read from and
-  write to it, and keep no private state of their own, so everything an agent
-  "knows" is visible to the user. It is maintained primarily by the agents but is
-  directly readable by the user. (Sharing project information between multiple
-  users is a planned future direction, not part of the current scope.)
+  user's projects. It is the **single source of truth**: agents read from it and
+  keep no private state of their own, so everything an agent "knows" is visible to
+  the user. Changes to it are applied through the orchestrator (see
+  Orchestration), and it is directly readable by the user. (Sharing project
+  information between multiple users is a planned future direction, not part of
+  the current scope.)
 - **Agent** — an actor that interprets what the user communicates, decides what
-  it pertains to, and updates the knowledge base accordingly. The platform
-  provides **multiple specialized agents** rather than one; agents are the
-  primary means of getting information *into* and *organized within* the
-  knowledge base.
-- **Orchestration** — the platform's coordination of its specialized agents:
-  routing a given input to the agent(s) best suited to handle it, and combining
-  their work when an input spans several concerns or projects.
+  it pertains to, and produces the resulting updates, which the orchestrator
+  applies to the knowledge base. The platform provides **multiple specialized
+  agents** rather than one; agents are the primary means of getting information
+  *into* and *organized within* the knowledge base.
+- **Orchestration** — the platform's coordination of its specialized agents,
+  performed by a single **orchestrator** that is the entry point for all user
+  input. It resolves which project(s) an input concerns, selects and invokes the
+  agents needed, combines their work, and applies the result under the configured
+  autonomy. When it cannot determine the target project confidently, it asks the
+  user.
 - **Workspace** — a grouping of projects, and the top-level container in the
   knowledge base. A workspace may hold information common to all the projects
   within it (for example, contact persons and their roles), so shared context is
@@ -107,6 +111,37 @@ different area, and may use a different underlying model for each. When the user
 provides input, the platform's **orchestration** routes it to the agent(s) best
 suited to handle it and combines their work when the input spans more than one
 concern or project (for example, a status update touching several projects).
+
+Agents are specialized along two axes, which can combine:
+
+- **By kind of work** — agents that carry out the platform's core mechanisms,
+  such as **retrieval** and **Q&A** agents that underpin knowledge update and
+  processing, and the **planning agent**.
+- **By subject/domain** — agents with expertise in a particular domain, such as a
+  **finance agent** that computes KPIs to include in a project's information.
+
+Agents are **not** specialized per project; no agent is tied to an individual
+project. Orchestration draws on the relevant work-type and domain agents to
+handle a given input.
+
+All user input flows through a single **orchestrator** — the entry point for
+everything the user types, speaks, or uploads; there is no direct path to a
+specific agent. For each input the orchestrator:
+
+1. **Resolves the target project(s).** The user may name the project in their
+   message; otherwise the orchestrator infers it from the content. If it cannot
+   determine the project confidently, it **asks the user** rather than guessing.
+2. **Selects and invokes the agents.** It determines which work-type and domain
+   agents the input requires — for example, pulling in the finance agent when a
+   KPI must be computed — and runs them.
+3. **Combines and applies the results.** It assembles the agents' outputs into
+   knowledge-base updates and task changes, applying them under the configured
+   autonomy (confirm by default).
+
+Specialized agents **return their results to the orchestrator**, which applies
+them to the knowledge base; agents do not write to the knowledge base
+independently. This keeps routing, combination, and the autonomy gate all in one
+place.
 
 Agents are **defined as part of the product** during development. Normal users
 do not define, configure, or compose agents; they interact with the platform and
@@ -243,6 +278,23 @@ exact mechanics are refined below and in Requirements as they are worked out.
 - **FR-19** The platform **orchestrates** its agents — selecting the appropriate
   agent(s) for an input and combining their outputs. _(Routing logic is open.)_
 - **FR-20** Different agents may be powered by **different underlying models**.
+- **FR-24** Agents are specialized by **kind of work** (for example, retrieval,
+  Q&A, planning) and by **subject/domain** (for example, a finance agent that
+  computes KPIs); the two axes may combine.
+- **FR-25** Agents are **not** specialized per project; no agent is tied to an
+  individual project.
+- **FR-26** All user input flows through a single **orchestrator** — the entry
+  point for typed, spoken, and uploaded input. There is no direct path to a
+  specific agent.
+- **FR-27** The orchestrator resolves the target project(s) for an input from the
+  user's explicit indication or by inference; if it cannot determine the project
+  confidently, it **asks the user** rather than guessing.
+- **FR-28** The orchestrator selects and invokes the agents an input requires,
+  combines their outputs, and applies the resulting changes under the configured
+  autonomy.
+- **FR-29** Agents return their results to the orchestrator, which applies the
+  changes to the knowledge base; no agent writes to the knowledge base
+  independently of the orchestrator.
 
 ### Autonomy and control
 
@@ -277,12 +329,16 @@ lost, and resolve them into the sections above as decisions are made._
   yet decided whether they are defined per individual project or as reusable
   templates shared across projects, and who may add or change them (relates to
   roles below).
-- **What the agent specializations are.** It is decided that there are multiple
-  specialized agents, but which specializations exist (e.g. by task type such as
-  capture vs. retrieval, by domain, by project) is not yet defined.
-- **How orchestration routes work.** How the platform decides which agent(s)
-  handle a given input — and how their outputs are combined when several are
-  involved — is not yet specified.
+- **The concrete roster of agents.** Specialization is by kind of work (e.g.
+  retrieval, Q&A, planning) and by subject/domain (e.g. a finance agent), and not
+  per project. Still to define: the full set of agents the product ships with,
+  and how domain agents (like finance) are invoked within the orchestration and
+  contribute their output back into the knowledge base.
+- **Orchestration details.** The orchestrator model is settled (single entry
+  point; resolve the project from explicit indication, inference, or by asking the
+  user; select and invoke agents; agents return results to the orchestrator, which
+  applies changes under the autonomy policy). Still to refine: how confidently the
+  orchestrator must infer a project before acting rather than asking the user.
 - **What a task connector must support.** The task integration is a pluggable
   connector. The minimum capabilities a connector must provide (e.g. create,
   update, query tasks) and how differences between platforms are handled are not
