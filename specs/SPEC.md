@@ -61,11 +61,18 @@ decided; terms still under discussion are marked as open._
   workspace. A project has a **status** (for example, *preparing*, *active*, or
   *closed*) that, among other things, scopes which projects normal requests
   consider.
-- **Section (block)** — a named unit of project information, modeled as a single
-  **block** of human-readable content (Markdown). A project is an ordered
-  collection of such blocks. Structure *within* a block is content the agent and
-  user maintain; the platform does not model the items inside it (see Knowledge
-  base representation).
+- **Node** — the generic unit of project information: a **title**, **content**
+  (human-readable Markdown), and an ordered list of **subnodes**. Nodes nest to
+  arbitrary depth, forming a tree. The platform models the node *tree* — titles,
+  content, nesting, ordering — but **not what a node means**: whether a node is a
+  problem, a decision, or an open topic is **interpreted by the agents** from its
+  title, content, and position, not tracked by the platform (see Knowledge base
+  representation).
+- **Section** — a **top-level node** under a project, and the unit the platform
+  gives **stable identity** and manages change at (versioning, concurrency). A
+  project is an ordered collection of sections; each section is a node tree whose
+  nested structure is content the agent and user maintain. The built-in sections
+  (Open topics, Decisions, Project log) are sections the platform seeds by default.
 - **Task** — a discrete unit of work the user does. Every task belongs to a
   project. Tasks are **not** stored in the knowledge base; they are managed in an
   external task-management platform that Personal Brain integrates with. Tasks are
@@ -148,6 +155,12 @@ Beyond these, the user can add their own sections — for example KPIs, a risk
 list, or anything else worth tracking about the project. (This is distinct from a
 project's lifecycle status, described below.)
 
+Sections are **not flat**. Within a section, information nests as **subnodes** to
+whatever depth is useful — a problem can carry its own sub-topics, a decision its
+own rationale and follow-ups. The platform models this nesting (titles, content,
+ordering); what each node *means* is left to its content and the agents'
+interpretation (see Knowledge base representation).
+
 The agents maintain these sections as information comes in. Because the structure
 (including any custom sections) is part of the knowledge base, the user can read
 **and edit** it directly as well, by hand.
@@ -174,51 +187,62 @@ This separates two kinds of mediation that the spec previously blurred:
   hand-editing both go through the platform and operate on the same human-readable
   content; the difference is only whether an agent is in the loop.
 
-### Content model: blocks
+### Content model: nodes
 
-Information is modeled as **blocks**:
+Information is modeled as a **tree of nodes**. A **node** has a **title**,
+**content** (human-readable Markdown), and an ordered list of **subnodes**; nodes
+nest to arbitrary depth. A node tree and a Markdown document are two views of the
+same thing — headings give titles and nesting, body text gives content — so the
+human-readable representation (FR-42) and lossless hand-editing (FR-45) are
+preserved.
 
-- A **section is one block** of human-readable content.
-- A **project is an ordered collection of named blocks**, plus project-level
-  metadata such as its status.
+- A **section is a top-level node** under a project.
+- A **project is an ordered collection of sections**, plus project-level metadata
+  such as its status. Each section is a node tree.
 - A **workspace is a collection of projects**, plus its common information — itself
-  block(s) in the flexible, no-predefined-structure form (FR-37).
+  node(s) in the flexible, no-predefined-structure form (FR-37).
 - The built-in sections (Open topics, Decisions, Project log) are **not special**:
-  they are blocks the platform **seeds by default**, and custom sections are more
-  blocks of the same kind.
+  they are sections the platform **seeds by default**, and custom sections are more
+  sections of the same kind.
 
 This draws one deliberate line:
 
-> **Structure *between* blocks is the platform's concern; structure *within* a
-> block is content.**
+> **The node tree — titles, content, nesting, ordering — is the platform's
+> concern; what a node *means* is content the agents and user interpret.**
 
-The platform knows about workspaces, projects, and named sections, and gives them
-**stable identity** — projects in particular need it for the project↔task mapping.
-It does **not** model the items *inside* a block. "Open topics" is a block listing
+The platform knows about workspaces, projects, and the node tree within each
+project, and it gives **stable identity** to workspaces, projects, and **sections**
+(the top-level nodes) — projects in particular need it for the project↔task mapping.
+It does **not** assign identity to nodes *below* the section, and it does **not**
+model what any node means. "Open topics" is a section whose subnodes are individual
 topics; the agent and the user maintain that internal structure — including whether
-a topic is open or resolved — as **content** (for example, a list or checkboxes),
-not as platform-tracked entities with their own state.
+a topic is open or resolved — as **content**, not as platform-tracked entities with
+their own state.
 
 Two consequences follow:
 
 - **Resolving an Open topic** (FR-12) means the responsible agent **edits the
-  block**, not a state transition on a tracked entity. The link from an external
-  task back to the topic it originated from is a **semantic association the agent
-  re-derives**, optionally reinforced by a lightweight reference the agent writes
-  **into the block content** itself — not a stored foreign key.
-- **Hand-editing round-trips losslessly.** Because a section's content *is* the
-  block, what the user edits is exactly what is stored and shown; there is no lossy
-  translation back into sub-entities.
+  relevant node**, not a state transition on a tracked entity. The link from an
+  external task back to the topic it originated from is a **semantic association the
+  agent re-derives**, optionally reinforced by a lightweight reference the agent
+  writes **into the node content** itself — not a stored foreign key. (Inner nodes
+  have no durable identity, so a stored reference would not be stable anyway.)
+- **Hand-editing round-trips losslessly.** A section's content *is* its node tree,
+  edited directly through a **structured outline editor** (or as the equivalent
+  Markdown); what the user edits is exactly what is stored and shown, with no lossy
+  translation into sub-entities.
 
 ## History, versioning, and concurrency
 
 The knowledge base is written by more than one party — agents (via the
 orchestrator), direct hand-edits, and reconciliation from task events — and from
-more than one device. The **block is the unit of writing**, and the platform manages
-change at that granularity.
+more than one device. The **section is the unit of writing**: a change anywhere in a
+section's node tree is a change to that section, and the platform manages change at
+that granularity. (Inner nodes have no independent identity or history; they live
+and version as part of their section.)
 
-**Versioning.** Every change to a block produces a **new version**, and the platform
-**keeps the full version history** of each block. History is what makes an
+**Versioning.** Every change to a section produces a **new version**, and the
+platform **keeps the full version history** of each section. History is what makes an
 agent-maintained knowledge base trustworthy: changes are reviewable and recoverable.
 
 **Audit trail.** Each version records the **actor** (the user, a specific agent, or
@@ -227,14 +251,16 @@ source artifact (FR-49) or task event. The history therefore doubles as an audit
 trail: "why did this change?" is always answerable, reinforcing transparency
 (NFR-2).
 
-**Concurrency.** Writes use **optimistic concurrency** at block granularity. A write
-states the block version it was based on; if the block has since moved on, the stale
-write is **rejected and re-driven** rather than silently overwriting — an agent
-re-reads and re-proposes, and a conflicting hand-edit is flagged to the user. A
+**Concurrency.** Writes use **optimistic concurrency** at section granularity. A
+write states the section version it was based on; if the section has since moved on,
+the stale write is **rejected and re-driven** rather than silently overwriting — an
+agent re-reads and re-proposes, and a conflicting hand-edit is flagged to the user. A
 proposal waiting in the review queue (FR-47) is likewise applied against the
-**current** version, so a block edited after the proposal was made is caught.
+**current** version, so a section edited after the proposal was made is caught.
+Because the section — not the whole project — is the unit, edits to different
+sections of the same project do not collide.
 
-**Undo.** The user can **revert a block to a prior version**; the revert is itself
+**Undo.** The user can **revert a section to a prior version**; the revert is itself
 recorded as a new version.
 
 ## How it works: agents and the knowledge base
@@ -432,11 +458,11 @@ of the extract/write step, not input-level idempotency.
 ## Reliability and consistency
 
 A single input can produce **multiple effects across two systems** — knowledge-base
-block writes (a store the platform controls) and task changes (an external platform
+section writes (a store the platform controls) and task changes (an external platform
 it does not). True cross-system atomicity is not achievable, so the platform applies
 effects on a **best-effort, per-effect basis** with **tracked status**:
 
-- **Each effect is applied independently.** A knowledge-base block write or a task
+- **Each effect is applied independently.** A knowledge-base section write or a task
   change succeeds or fails on its own; successes are durable and are **not** rolled
   back if a sibling effect fails. There is no all-or-nothing guarantee — across the
   two systems or even within the knowledge base.
@@ -559,12 +585,12 @@ is the **retention window / auto-purge policy** (see Open questions).
 ## Scale, performance, and configuration
 
 **Scale and retrieval.** The product is sized for **single-user scale** — on the
-order of **hundreds of projects** and **thousands of blocks**, each block from a
-paragraph to a few pages. A single project's information typically fits in a model's
-context, but a single input or conversation routinely references **several projects**
-(FR-10), so retrieval does **not** load whole projects: the **retrieval agent
-assembles a working set of the relevant blocks across the identified projects**,
-ranked to fit the context. Because the relevant projects are not always named,
+order of **hundreds of projects** and **thousands of sections**, each section a node
+tree from a paragraph to a few pages. A single project's information typically fits
+in a model's context, but a single input or conversation routinely references
+**several projects** (FR-10), so retrieval does **not** load whole projects: the
+**retrieval agent assembles a working set of the relevant sections across the
+identified projects**, ranked to fit the context. Because the relevant projects are not always named,
 **semantic search across the knowledge base is a first-class retrieval mechanism** —
 alongside structured navigation (workspace → project → section) and keyword search —
 not merely an optional enhancement, though it stays bounded by the single-user scale
@@ -625,34 +651,39 @@ Settings persist as authoritative platform state in managed storage.
 - **FR-42** The platform **owns and hides the underlying storage form** of the
   knowledge base, exposing and accepting knowledge in a stable, **human-readable
   representation (Markdown)**.
-- **FR-43** Project information is modeled as **blocks**: each **section is one
-  block** of human-readable content; a **project is an ordered collection of named
-  blocks** plus project-level metadata (such as status); a **workspace is a
-  collection of projects** plus common-information block(s). The built-in sections
-  are blocks the platform **seeds by default**.
-- **FR-44** The platform models structure **between** blocks — workspaces,
-  projects, and named sections — and gives these **stable identity** (projects in
-  particular, for the project↔task mapping). Structure **within** a block,
-  including the open/resolved state of topics, is **content** maintained by the
-  agent and user, **not** platform-tracked entities.
+- **FR-43** Project information is modeled as a **tree of nodes**, where a **node**
+  has a **title**, **content** (human-readable Markdown), and ordered **subnodes**.
+  A **section is a top-level node** under a project; a **project is an ordered
+  collection of sections** plus project-level metadata (such as status); a
+  **workspace is a collection of projects** plus common-information node(s). The
+  built-in sections are sections the platform **seeds by default**.
+- **FR-44** The platform models the **node tree** — titles, content, nesting, and
+  ordering — and gives **stable identity** to workspaces, projects, and **sections**
+  (the top-level nodes; projects in particular need it for the project↔task
+  mapping). It does **not** give identity to nodes **below** the section, and it
+  does **not** model what a node **means**: a node's meaning (problem, decision,
+  open topic) and any state (such as a topic being open or resolved) are **content**
+  the agents and user interpret, **not** platform-tracked entities.
 - **FR-45** The platform **always mediates the underlying store** (neither the user
   nor the agents access it directly), while the **agent is optional in the loop**:
-  direct hand-editing edits the human-readable representation through a platform
-  surface and **round-trips losslessly** (refines FR-41).
+  direct hand-editing operates on the node tree through a platform surface — a
+  **structured outline editor** or the equivalent Markdown — and **round-trips
+  losslessly** (refines FR-41).
 
 ### History, versioning, and concurrency
 
-- **FR-57** Every change to a block produces a **new version**; the platform keeps
-  the **full per-block version history**.
+- **FR-57** Every change to a **section** produces a **new version**; the platform
+  keeps the **full per-section version history**. A section versions as a whole,
+  including its nested node tree; inner nodes have no independent history.
 - **FR-58** Each version records the **actor** (the user, a specific agent, or
   reconciliation), a **timestamp**, and a **link to the originating input** (source
   artifact, FR-49) or task event; the history serves as the **audit trail** (NFR-2).
-- **FR-59** Writes use **optimistic concurrency at block granularity**: a write
-  carries the base block version, and a **stale write is rejected and re-driven**
+- **FR-59** Writes use **optimistic concurrency at section granularity**: a write
+  carries the base section version, and a **stale write is rejected and re-driven**
   (the agent re-reads and re-proposes; a conflicting hand-edit is flagged) rather
-  than silently overwriting. Queued proposals (FR-47) are applied against the
-  **current** version.
-- **FR-60** The user can **revert a block to a prior version**; the revert is
+  than silently overwriting. Edits to different sections of the same project do not
+  collide. Queued proposals (FR-47) are applied against the **current** version.
+- **FR-60** The user can **revert a section to a prior version**; the revert is
   recorded as a new version.
 
 ### Capture
@@ -670,9 +701,9 @@ Settings persist as authoritative platform state in managed storage.
 - **FR-12** Changes to a task in the external platform (for example, completion)
   are **reflected back** into the knowledge base (for example, a Project log entry
   or resolution of an Open topic). See FR-30 for timing. Resolving an Open topic is
-  realized by the agent **editing the block** (FR-44); the task→topic link is a
-  **semantic association** (optionally reinforced by an in-content reference), not a
-  stored foreign key.
+  realized by the agent **editing the relevant node** (FR-44); the task→topic link
+  is a **semantic association** (optionally reinforced by an in-content reference),
+  not a stored foreign key.
 - **FR-36** Voice is supported for **input only**; agents respond in text, not by
   voice.
 - **FR-48** Accepted inputs are **typed text**, **speech** (transcribed
@@ -699,10 +730,10 @@ Settings persist as authoritative platform state in managed storage.
 - **FR-40** By default, **normal requests exclude closed projects** from their
   scope; the user can include them explicitly when needed.
 - **FR-61** When resolving inputs and answering questions, the **retrieval agent
-  assembles a working set of the relevant blocks across the project(s) an input
+  assembles a working set of the relevant sections across the project(s) an input
   references** (FR-10) rather than loading whole projects, using **semantic search**,
-  structured navigation, and keyword search, and **ranking results to fit the model
-  context**.
+  structured navigation (workspace → project → section → nested nodes), and keyword
+  search, and **ranking results to fit the model context**.
 
 ### Tasks and planning
 
@@ -790,7 +821,7 @@ Settings persist as authoritative platform state in managed storage.
 
 ### Reliability and consistency
 
-- **FR-52** The effects of an input (knowledge-base block writes and task changes)
+- **FR-52** The effects of an input (knowledge-base section writes and task changes)
   are applied **best-effort, per effect, with tracked status**; a success is durable
   and is **not** rolled back if a sibling effect fails. There is **no all-or-nothing
   guarantee** — across systems or within the knowledge base.
@@ -847,7 +878,7 @@ Settings persist as authoritative platform state in managed storage.
   (FR-49), and the knowledge base and task platform **converge to consistency** via
   the mapping and reconciliation (FR-56).
 - **NFR-13** **Scale.** The platform targets single-user scale — order **hundreds of
-  projects** and **thousands of blocks**. Retrieval assembles a working set across
+  projects** and **thousands of sections**. Retrieval assembles a working set across
   the referenced projects rather than loading whole projects (FR-61); **semantic
   search** across the knowledge base is a first-class mechanism at this scale.
 - **NFR-14** **Performance.** Interactive operations respond **conversationally** (a
