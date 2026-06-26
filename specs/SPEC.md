@@ -2,7 +2,8 @@
 
 > Living specification for the Personal Brain platform. This document evolves as
 > requirements are discovered and refined. See [`CLAUDE.md`](../CLAUDE.md) for how
-> we work on it.
+> we work on it. For **how** the platform is built to satisfy these requirements,
+> see the companion [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
 ## Overview
 
